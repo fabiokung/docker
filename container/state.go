@@ -8,7 +8,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/go-units"
+	units "github.com/docker/go-units"
 )
 
 // State holds the current container state, and has methods to get and
@@ -325,13 +325,6 @@ func (s *State) SetRemovalInProgress() bool {
 func (s *State) ResetRemovalInProgress() {
 	s.Lock()
 	s.RemovalInProgress = false
-	s.Unlock()
-}
-
-// SetDead sets the container state to "dead"
-func (s *State) SetDead() {
-	s.Lock()
-	s.Dead = true
 	s.Unlock()
 }
 
