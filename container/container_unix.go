@@ -445,6 +445,7 @@ func (container *Container) EnableServiceDiscoveryOnDefaultNetwork() bool {
 	return false
 }
 
+// GetMountPoints gives a platform specific transformation to types.MountPoint
 func (container *Container) GetMountPoints() []types.MountPoint {
 	mountPoints := make([]types.MountPoint, 0, len(container.MountPoints))
 	for _, m := range container.MountPoints {
