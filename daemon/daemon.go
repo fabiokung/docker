@@ -196,8 +196,8 @@ func (daemon *Daemon) restore() error {
 		wg.Add(1)
 		go func(c *container.Container) {
 			defer wg.Done()
-			if err := backportMountSpec(c); err != nil {
-				logrus.Error("Failed to migrate old mounts to use new spec format")
+			if err := daemon.backportMountSpec(c); err != nil {
+				logrus.Errorf("Failed to migrate old mounts to use new spec format: %v", err)
 			}
 
 			if c.IsRunning() || c.IsPaused() {
@@ -268,7 +268,9 @@ func (daemon *Daemon) restore() error {
 				logrus.Debugf("Resetting RemovalInProgress flag from %v", c.ID)
 				c.RemovalInProgress = false
 				c.Dead = true
-				c.ToDisk()
+				if err := c.CheckpointTo(daemon.containersReplica); err != nil {
+					logrus.Errorf("Failed to update container %s state: %v", c.ID, err)
+				}
 			}
 			c.Unlock()
 		}(c)

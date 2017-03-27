@@ -239,7 +239,7 @@ func (daemon *Daemon) lazyInitializeVolume(containerID string, m *volume.MountPo
 	return nil
 }
 
-func backportMountSpec(container *container.Container) error {
+func (daemon *Daemon) backportMountSpec(container *container.Container) error {
 	for target, m := range container.MountPoints {
 		if m.Spec.Type != "" {
 			// if type is set on even one mount, no need to migrate
@@ -280,7 +280,9 @@ func backportMountSpec(container *container.Container) error {
 			m.Spec.ReadOnly = true
 		}
 	}
-	return container.ToDiskLocking()
+	container.Lock()
+	defer container.Unlock()
+	return container.CheckpointTo(daemon.containersReplica)
 }
 
 func (daemon *Daemon) traverseLocalVolumes(fn func(volume.Volume) error) error {
