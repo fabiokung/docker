@@ -18,6 +18,7 @@ import (
 	"github.com/docker/docker/pkg/truncindex"
 	"github.com/docker/docker/runconfig"
 	"github.com/docker/go-connections/nat"
+	"github.com/opencontainers/runc/libcontainer/label"
 )
 
 // GetContainer looks for a container using the provided information, which could be
@@ -88,6 +89,9 @@ func (daemon *Daemon) load(id string) (*container.Container, error) {
 	container := daemon.newBaseContainer(id)
 
 	if err := container.FromDisk(); err != nil {
+		return nil, err
+	}
+	if err := label.ReserveLabel(container.ProcessLabel); err != nil {
 		return nil, err
 	}
 
