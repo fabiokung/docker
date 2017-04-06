@@ -27,6 +27,9 @@ func (daemon *Daemon) StateChanged(id string, e libcontainerd.StateInfo) error {
 			return errors.New("Received StateOOM from libcontainerd on Windows. This should never happen.")
 		}
 		daemon.updateHealthMonitor(c)
+		if err := c.CheckpointTo(daemon.containersReplica); err != nil {
+			return err
+		}
 		daemon.LogContainerEvent(c, "oom")
 	case libcontainerd.StateExit:
 		// if container's AutoRemove flag is set, remove it after clean up
@@ -109,27 +112,27 @@ func (daemon *Daemon) StateChanged(id string, e libcontainerd.StateInfo) error {
 		c.SetRunning(int(e.Pid), e.State == libcontainerd.StateStart)
 		c.HasBeenManuallyStopped = false
 		c.HasBeenStartedBefore = true
+		daemon.initHealthMonitor(c)
 		if err := c.CheckpointTo(daemon.containersReplica); err != nil {
 			c.Reset(false)
 			return err
 		}
-		daemon.initHealthMonitor(c)
 		daemon.LogContainerEvent(c, "start")
 	case libcontainerd.StatePause:
 		// Container is already locked in this case
 		c.Paused = true
+		daemon.updateHealthMonitor(c)
 		if err := c.CheckpointTo(daemon.containersReplica); err != nil {
 			return err
 		}
-		daemon.updateHealthMonitor(c)
 		daemon.LogContainerEvent(c, "pause")
 	case libcontainerd.StateResume:
 		// Container is already locked in this case
 		c.Paused = false
+		daemon.updateHealthMonitor(c)
 		if err := c.CheckpointTo(daemon.containersReplica); err != nil {
 			return err
 		}
-		daemon.updateHealthMonitor(c)
 		daemon.LogContainerEvent(c, "unpause")
 	}
 
